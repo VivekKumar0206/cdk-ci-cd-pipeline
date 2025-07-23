@@ -68,8 +68,8 @@
     "@aws-cdk/aws-ec2:ebsDefaultGp3Volume": true,
     "@aws-cdk/aws-ecs:removeDefaultDeploymentAlarm": true,
     "@aws-cdk/custom-resources:logApiResponseDataPropertyTrueDefault": false,
-    "infrastructureRepoName": "",
-    "repositoryOwner": "",
+    "infrastructureRepoName": "cdk-ci-cd-pipeline",
+    "repositoryOwner": "VivekKumar0206",
     "domain": "",
     "dev": {
       "envName": "dev",

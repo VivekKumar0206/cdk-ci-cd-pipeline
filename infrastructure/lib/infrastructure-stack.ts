@@ -18,7 +18,7 @@ export class InfrastructureStack extends Stack {
       this,
       "InfraBucket",
       {
-        bucketName: `your-${DEPLOY_ENVIRONMENT}-infrastructure-bucket`,
+        bucketName: `${DEPLOY_ENVIRONMENT}-infrastructure-bucket-${this.region}`,
         removalPolicy: RemovalPolicy.DESTROY
       }
     )

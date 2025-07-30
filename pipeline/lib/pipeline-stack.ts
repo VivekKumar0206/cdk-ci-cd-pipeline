@@ -65,89 +65,85 @@ export class PipelineStack extends Stack {
     
     const infrastructureSourceOutput = new Artifact('InfrastructureSourceOutput');
 
-    const regionalCodeBuildProjects: CodeBuildAction[] = [];
+  //   const regionalCodeBuildProjects: CodeBuildAction[] = [];
 
-  for (const region of deployRegions) {
-    // create a project per region or reuse if possible
-    const project = new PipelineProject(this, `InfrastructureBuildProject-${region}`, {
-      role: infrastructureDeployRole,
-      environment: { buildImage: LinuxBuildImage.AMAZON_LINUX_2_5 },
-      environmentVariables: {
-        DEPLOY_ENVIRONMENT: { value: envName },
-        REGION: { value: region },
-      },
-      buildSpec: BuildSpec.fromObject({
-        version: '0.2',
-        phases: {
-          install: {
-            'runtime-versions': { nodejs: '20.x' },
-            commands: [
-              'npm install -g aws-cdk',
-              'cd infrastructure',
-              'npm install'
-            ]
-          },
-          build: {
-          commands: [
-            'cdk deploy --context env=$DEPLOY_ENVIRONMENT --require-approval never --region $REGION'
-          ]
-          }
-        }
-      }),
-    });
+  // for (const region of deployRegions) {
+  //   // create a project per region or reuse if possible
+  //   const project = new PipelineProject(this, `InfrastructureBuildProject-${region}`, {
+  //     role: infrastructureDeployRole,
+  //     environment: { buildImage: LinuxBuildImage.AMAZON_LINUX_2_5 },
+  //     environmentVariables: {
+  //       DEPLOY_ENVIRONMENT: { value: envName },
+  //       REGION: { value: region },
+  //     },
+  //     buildSpec: BuildSpec.fromObject({
+  //       version: '0.2',
+  //       phases: {
+  //         install: {
+  //           'runtime-versions': { nodejs: '20.x' },
+  //           commands: [
+  //             'npm install -g aws-cdk',
+  //             'cd infrastructure',
+  //             'npm install'
+  //           ]
+  //         },
+  //         build: {
+  //         commands: [
+  //           'cdk deploy --context env=$DEPLOY_ENVIRONMENT --require-approval never'
+  //         ]
+  //         }
+  //       }
+  //     }),
+  //   });
 
-    regionalCodeBuildProjects.push(
-      new CodeBuildAction({
-        actionName: `DeployCdkInfrastructure-${region}`,
-        project,
-        input: infrastructureSourceOutput,
+  //   regionalCodeBuildProjects.push(
+  //     new CodeBuildAction({
+  //       actionName: `DeployCdkInfrastructure-${region}`,
+  //       project,
+  //       input: infrastructureSourceOutput,
+  //       role: infrastructureDeployRole,
+  //     })
+  //   );
+  // }
+
+
+    //Build project for infrastructure (CDK)
+    const infrastructureBuildProject = new PipelineProject(
+      this,
+      'InfrastructureBuildProject',
+      {
         role: infrastructureDeployRole,
-      })
+        environment: {
+          buildImage: LinuxBuildImage.AMAZON_LINUX_2_5
+        },
+        environmentVariables: {
+          DEPLOY_ENVIRONMENT: {
+            value: envName
+          },
+          DEPLOY_REGIONS: { value: deployRegions }
+        },
+        buildSpec: BuildSpec.fromObject({
+          version: '0.2',
+          phases: {
+            install: {
+              'runtime-versions': {
+                nodejs: '20.x'
+              },
+              commands: [
+                'npm install -g aws-cdk',
+                'cd infrastructure',
+                'npm install'
+              ]
+            },
+            build: {
+              commands: [
+                'cdk deploy --context env=$DEPLOY_ENVIRONMENT'
+              ]
+            }
+          }
+        }),
+      }
     );
-  }
-
-
-    // Build project for infrastructure (CDK)
-//     const infrastructureBuildProject = new PipelineProject(
-//       this,
-//       'InfrastructureBuildProject',
-//       {
-//         role: infrastructureDeployRole,
-//         environment: {
-//           buildImage: LinuxBuildImage.AMAZON_LINUX_2_5
-//         },
-//         environmentVariables: {
-//           DEPLOY_ENVIRONMENT: {
-//             value: envName
-//           },
-//           DEPLOY_REGIONS: { value: deployRegions }
-//         },
-//         buildSpec: BuildSpec.fromObject({
-//           version: '0.2',
-//           phases: {
-//             install: {
-//               'runtime-versions': {
-//                 nodejs: '20.x'
-//               },
-//               commands: [
-//                 'npm install -g aws-cdk',
-//                 'cd infrastructure',
-//                 'npm install'
-//               ]
-//             },
-//             build: {
-//               commands: [
-//                 `
-//                   for REGION in $DEPLOY_REGIONS; do
-//                     cdk deploy --context env=$DEPLOY_ENVIRONMENT --region $REGION
-//                   done
-//                 `
-//               ]
-//             }
-//           }
-//         }),
-//       }
-//     );
 
     // Define the CodePipeline
     const pipeline = new Pipeline(
@@ -175,24 +171,24 @@ export class PipelineStack extends Stack {
       ],
     });
 
-    pipeline.addStage({
-      stageName: 'Deploy',
-      actions: regionalCodeBuildProjects, // multiple actions == parallel execution
-    });
-
-
-    // // Deploy the CDK infrastructure
     // pipeline.addStage({
     //   stageName: 'Deploy',
-    //   actions: [
-    //     new CodeBuildAction({
-    //       actionName: 'DeployCdkInfrastructure',
-    //       project: infrastructureBuildProject,
-    //       input: infrastructureSourceOutput,
-    //       role: infrastructureDeployRole
-    //     }),
-    //   ],
+    //   actions: regionalCodeBuildProjects, // multiple actions == parallel execution
     // });
+
+
+    // Deploy the CDK infrastructure
+    pipeline.addStage({
+      stageName: 'Deploy',
+      actions: [
+        new CodeBuildAction({
+          actionName: 'DeployCdkInfrastructure',
+          project: infrastructureBuildProject,
+          input: infrastructureSourceOutput,
+          role: infrastructureDeployRole
+        }),
+      ],
+    });
 
   }
 }

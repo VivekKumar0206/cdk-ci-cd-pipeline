@@ -70,7 +70,6 @@
     "@aws-cdk/custom-resources:logApiResponseDataPropertyTrueDefault": false,
     "infrastructureRepoName": "cdk-ci-cd-pipeline",
     "repositoryOwner": "VivekKumar0206",
-    "domain": "",
     "dev": {
       "envName": "dev",
       "infrastructureBranchName": "dev"
@@ -78,6 +77,7 @@
     "prod": {
       "envName": "prod",
       "infrastructureBranchName": "main"
-    }
+    },
+    "deployRegions": ["us-east-1","us-east-2"]
   }
 }

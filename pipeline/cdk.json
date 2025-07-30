@@ -78,6 +78,6 @@
       "envName": "prod",
       "infrastructureBranchName": "main"
     },
-    "deployRegions": ["us-east-1","us-east-2"]
+    "deployRegions": ["us-east-1","ap-south-1"]
   }
 }

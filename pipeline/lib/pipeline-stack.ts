@@ -137,7 +137,7 @@ export class PipelineStack extends Stack {
             },
             build: {
               commands: [
-                'cdk deploy --context env=$DEPLOY_ENVIRONMENT'
+                'cdk deploy --context env=$DEPLOY_ENVIRONMENT --all'
               ]
             }
           }
